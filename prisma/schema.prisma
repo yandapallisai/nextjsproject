@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String @unique
+  password String
+}
+
+model Exam {
+  id            Int      @id @default(autoincrement())
+  assessmentId  String   @unique @map("assessment_id")
+  title         String
+  date          String
+  time          String
+  duration      Int
+  expiry        DateTime
+  createdDate   DateTime @default(now()) @map("created_date")
+  createdBy     String   @map("created_by")
+  fileStatus    String   @map("file_status")
+  examStatus    String   @map("exam_status")
+  
+  examFiles     ExamFile[]
+  examAttendees ExamAttendee[]
+  questions     Question[]
+  answers       AttendeeAnswer[]
+  performance   Performance[]
+}
+
+model ExamFile {
+  id            Int    @id @default(autoincrement())
+  assessmentId  String @map("assessment_id")
+  questionPaper Bytes  @map("question_paper")
+  filename      String
+  
+  exam Exam @relation(fields: [assessmentId], references: [assessmentId])
+}
+
+model ExamAttendee {
+  id            Int     @id @default(autoincrement())
+  assessmentId  String  @map("assessment_id")
+  attendeeId    String  @map("attendee_id")
+  attendeeName  String  @map("attendee_name")
+  isActive      Boolean @default(false) @map("is_active")
+  faceImage     Bytes   @map("face_image")
+  faceEmbedding Bytes?  @map("face_embedding")
+  
+  exam Exam @relation(fields: [assessmentId], references: [assessmentId])
+}
+
+model Question {
+  id           Int     @id @default(autoincrement())
+  assessmentId String  @map("assessment_id")
+  questionText String  @map("question_text")
+  questionType String  @map("question_type")
+  options      Json?
+  correctAnswer String? @map("correct_answer")
+  
+  exam Exam @relation(fields: [assessmentId], references: [assessmentId])
+}
+
+model AttendeeAnswer {
+  id           Int      @id @default(autoincrement())
+  assessmentId String   @map("assessment_id")
+  attendeeId   String   @map("attendee_id")
+  answersJson  Json     @map("answers_json")
+  submittedAt  DateTime @default(now()) @map("submitted_at")
+  
+  exam Exam @relation(fields: [assessmentId], references: [assessmentId])
+}
+
+model Performance {
+  id               Int    @id @default(autoincrement())
+  assessmentId     String @map("assessment_id")
+  attendeeId       String @map("attendee_id")
+  correctAnswers   Int    @default(0) @map("correct_answers")
+  incorrectAnswers Int    @default(0) @map("incorrect_answers")
+  unanswered       Int    @default(0)
+  totalMarks       Float  @default(0.0) @map("total_marks")
+  
+  exam Exam @relation(fields: [assessmentId], references: [assessmentId])
+}
